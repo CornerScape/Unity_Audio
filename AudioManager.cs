@@ -217,8 +217,9 @@ namespace Szn.Framework.Audio
             }
             
             if(!effectSwitch) return;
-            
-            if (!audioClipPools.TryGetValue(InAudioKey, out var audioClip))
+
+            audioClipPools.TryGetValue(InAudioKey, out var audioClip);
+            if(null == audioClip)
             {
                 audioClip = AudioLoader.Load(InAudioKey);
                 audioClipPools.Add(InAudioKey, audioClip);

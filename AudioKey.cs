@@ -4,10 +4,9 @@ namespace Szn.Framework.Audio
 {
     public enum AudioKey
     {
-        A,
-        B,
-        C,
-        D,
+        Piano,
+        Piano2_6ra,
+        Piano2_7si,
         Max    
     }
     
