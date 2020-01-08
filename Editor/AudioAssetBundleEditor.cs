@@ -8,8 +8,6 @@ namespace Szn.Framework.Audio.Editor
 {
     public class AudioAssetBundleEditor : MonoBehaviour
     {
-        private static string sourcePath = "Assets/Bundle/Audio";
-
         private struct BuildInfo
         {
             private readonly string name;
@@ -35,7 +33,7 @@ namespace Szn.Framework.Audio.Editor
             if (Directory.Exists(streamPath)) Directory.Delete(streamPath, true);
             Directory.CreateDirectory(streamPath);
 
-            DirectoryInfo dirInfo = new DirectoryInfo(sourcePath);
+            DirectoryInfo dirInfo = new DirectoryInfo(AudioConfig.AUDIO_RES_ASSETS_PATH_S);
             FileInfo[] infos = dirInfo.GetFiles();
             int length = infos.Length;
             AssetBundleBuild[] levelDataList = new AssetBundleBuild[length];
@@ -44,12 +42,12 @@ namespace Szn.Framework.Audio.Editor
                 if (infos[i].Extension.Equals(".meta")) continue;
 
                 string filename = Path.GetFileNameWithoutExtension(infos[i].Name).ToLower();
-                AssetImporter importer = AssetImporter.GetAtPath(Path.Combine(sourcePath, infos[i].Name));
+                AssetImporter importer = AssetImporter.GetAtPath(Path.Combine(AudioConfig.AUDIO_RES_ASSETS_PATH_S, infos[i].Name));
                 importer.assetBundleName = filename;
 
                 levelDataList[i] = new AssetBundleBuild
                 {
-                    assetBundleName = filename,
+                    assetBundleName = MD5Tools.GetStringMd5(filename),
                     assetNames = new[] {importer.assetPath}
                 };
             }
@@ -59,8 +57,10 @@ namespace Szn.Framework.Audio.Editor
                 EditorUserBuildSettings.activeBuildTarget);
 
             WriteVersion(streamPath);
-            
+
             AssetDatabase.Refresh();
+
+            EditorUtility.DisplayDialog("Tips", "Build audio asset bundle completed.", "ok");
         }
 
         private static void WriteVersion(string InStreamPath)
@@ -84,16 +84,14 @@ namespace Szn.Framework.Audio.Editor
                     buildFileInfos[i].Delete();
                     continue;
                 }
-
-                Debug.LogError(
-                    $"{buildFileInfos[i].Name},{MD5Tools.GetFileMd5(Path.Combine(InStreamPath, buildFileInfos[i].Name))}");
-
+                
                 buildInfos.Add(new BuildInfo(buildFileInfos[i].Name,
                     MD5Tools.GetFileMd5(Path.Combine(InStreamPath, buildFileInfos[i].Name))));
             }
 
 
-            using (FileStream fs = new FileStream(Path.Combine(InStreamPath, "Version.txt"), FileMode.Create,
+            using (FileStream fs = new FileStream(Path.Combine(InStreamPath, "45264b0d287afd9795f479a7882b3765"),
+                FileMode.Create,
                 FileAccess.ReadWrite, FileShare.ReadWrite))
             {
                 using (StreamWriter sw = new StreamWriter(fs))

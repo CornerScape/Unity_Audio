@@ -2,14 +2,6 @@
 
 namespace Szn.Framework.Audio
 {
-    public enum AudioKey
-    {
-        Piano,
-        Piano2_6ra,
-        Piano2_7si,
-        Max    
-    }
-    
     public class AudioKeyEqualityComparer : IEqualityComparer<AudioKey>
     {
 

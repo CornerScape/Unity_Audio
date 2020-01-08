@@ -25,7 +25,7 @@ namespace Szn.Framework.Audio
         private readonly Dictionary<AudioKey, AudioClip> audioClipPools =
             new Dictionary<AudioKey, AudioClip>((int) AudioKey.Max, new AudioKeyEqualityComparer());
 
-        private readonly List<AudioSource> effectAudioSourcePools =new List<AudioSource>((int)AudioKey.Max);
+        private readonly List<AudioSource> effectAudioSourcePools =new List<AudioSource>((int)AudioKey.Max * 2);
         
         private const string MUSIC_SWITCH_PREF_KEY_S = "MusicSwitchPrefKey";
         private bool musicSwitch;
@@ -117,6 +117,21 @@ namespace Szn.Framework.Audio
             musicAudioSource.volume = musicVolume;
             musicAudioSource.playOnAwake = false;
             musicAudioSource.loop = true;
+            
+        }
+
+        public void StartUpdater()
+        {
+            void OnAudioResUpdateCompleted(string InMsg)
+            {
+                audioClipPools.Clear();
+                // ReSharper disable once DelegateSubtraction
+                AudioConfig.UpdateCompletedCallbackAction -= OnAudioResUpdateCompleted;
+            }
+
+            AudioConfig.UpdateCompletedCallbackAction += OnAudioResUpdateCompleted;
+            AudioUpdater.Start(this);
+            
         }
 
         private AudioSource GetEffectAudioSource(GameObject InBindGameObj = null)
@@ -161,16 +176,36 @@ namespace Szn.Framework.Audio
             return bindAudioSource;
         }
         
+        private void StopMusic()
+        {
+            if(musicAudioSource.isPlaying) musicAudioSource.Stop();
+        }
+        
         private void ResumeMusic()
         {
             if(currentMusic != AudioKey.Max) PlayMusic(currentMusic);
         }
-        
-        private void StopMusic()
+
+        public void Mute()
         {
-            musicAudioSource.Stop();
+            EffectSwitch = false;
+            MusicSwitch = false;
+            
+            StopMusic();
+            int count = effectAudioSourcePools.Count;
+            for (int i = 0; i < count; i++)
+            {
+                effectAudioSourcePools[i].Stop();
+            }
         }
 
+        public void Resume()
+        {
+            MusicSwitch = true;
+            EffectSwitch = true;
+            ResumeMusic();
+        }
+        
         public void PlayMusic(AudioKey InAudioKey, bool InIsLoop = true, bool InIsRestart = false)
         {
             if (InAudioKey == AudioKey.Max)

@@ -1,9 +1,9 @@
 ﻿using System.IO;
 using UnityEngine;
 using Szn.Framework.UtilPackage;
-
 #if UNITY_EDITOR
 using System.Collections.Generic;
+
 #endif
 
 namespace Szn.Framework.Audio
@@ -17,6 +17,7 @@ namespace Szn.Framework.Audio
         public static AudioClip Load(AudioKey InAudioKey)
         {
 #if UNITY_EDITOR
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (!AudioConfig.USE_ASSET_BUNDLE_IN_EDITOR_B)
             {
                 if (_keyForFullname == null)
@@ -48,13 +49,21 @@ namespace Szn.Framework.Audio
             string fileName = InAudioKey.ToString();
             string bundleName = fileName.ToLower();
 
-            string localPath = Path.Combine(Application.persistentDataPath,
-                $"{AudioConfig.Platform}/b22f0418e8ac915eb66f829d262d14a2/{MD5Tools.GetStringMd5(fileName)}");
+            string localPath =
+                UnityPathTools.GetPersistentDataPath(
+                    $"b22f0418e8ac915eb66f829d262d14a2/{MD5Tools.GetStringMd5(bundleName)}");
 
-            string streamPath = Path.Combine(Application.streamingAssetsPath, $"{AudioConfig.Platform}/Audio/{bundleName}");
+            string streamPath = UnityPathTools.GetStreamingAssetsPath($"Audio/{MD5Tools.GetStringMd5(bundleName)}");
 
-            return AssetBundle.LoadFromFile(File.Exists(localPath) ? localPath : streamPath)
-                .LoadAsset<AudioClip>(fileName);
+            AssetBundle ab = AssetBundle.LoadFromFile(File.Exists(localPath) ? localPath : streamPath);
+
+            if (ab == null) return null;
+
+            AudioClip ac = ab.LoadAsset<AudioClip>(fileName);
+
+            ab.Unload(false);
+
+            return ac;
         }
     }
 }
